@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.3</title>
+  <title>Acquire Hotel Status v1.4</title>
   <style>
     th { font-size:xxx-large; }
     td, button {
@@ -72,8 +72,8 @@
       {
         hotelStatus[i].innerHTML = "<button onclick='updateSize(" + i + ", -1)'>-</button> "
                                 + "<img style='max-width:8vw;max-height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> "
-                                + "<button onclick='updateSize(" + i + ", 1)'>+</button> &nbsp; "
-                                + "<input style='width:4vw;height:5vh;font-size:2vh;font-weight:bold' type='number' value='25' min='0' max='25'/>"
+                                + "<button onclick='updateSize(" + i + ", 1)'>+</button> "
+                                + "<input style='max-width:7vw;height:5vh;font-size:2vh;font-weight:bold' type='number' value='25' min='0' max='25'/>"
                                 + "<button onclick='this.previousSibling.value = Math.max( 0, this.previousSibling.value-1 );'>-</button>"
                                 + "<button onclick='this.previousSibling.previousSibling.value = Math.min( 25, this.previousSibling.previousSibling.value-0+1 );'>+</button>"
                                 + "<div name='status' class='status'></div>";
