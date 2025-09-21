@@ -78,7 +78,7 @@
       for( var i = 0; i < hotelNames.length; i++ )
       {
         hotelStatus[i].innerHTML = "<button onclick='updateSize(" + i + ", -1)'>-</button> ";
-        hotelStatus[i].innerHTML += "<img style='height:7vh' src='acquire_pics/" + i + ".png' onclick='merge(" + i + ")'/> ";
+        hotelStatus[i].innerHTML += "<img style='height:7vh' src='" + i + ".png' onclick='merge(" + i + ")'/> ";
         hotelStatus[i].innerHTML += "<button onclick='updateSize(" + i + ", 1)'>+</button> &nbsp; ";
         // hotelStatus[i].innerHTML += "<button onclick='merge(" + i + ")'>M</button>";
         hotelStatus[i].innerHTML += "<div name='status' class='status'></div>";
@@ -137,7 +137,7 @@
           candidates.innerHTML = "";
 
           for( var i = 0; i < candidateList.length; i++ )
-            candidates.innerHTML += "<img style='width:15%' src='acquire_pics/" + candidateList[i] + ".png' onclick='mergeTo(" + candidateList[i] + ", " + hotelID + ")'/> ";
+            candidates.innerHTML += "<img style='width:15%' src='" + candidateList[i] + ".png' onclick='mergeTo(" + candidateList[i] + ", " + hotelID + ")'/> ";
         }
       }
     }
@@ -161,8 +161,8 @@
     }
   </script>
 </head>
-<body onload="init()" background="acquire_pics/bg.jpg" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;">
-  <!-- <body onload="init()" background="acquire_pics/bg.jpg" onbeforeunload="return false;" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;"> -->
+<body onload="init()" background="bg.jpg" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;">
+  <!-- <body onload="init()" background="bg.jpg" onbeforeunload="return false;" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;"> -->
     <div id="selection" style="display:none">
       <table style="width:100%;height:100%;background-color:white">
         <tr style="height:10%"><th>합병할 호텔을 선택하세요</th></tr>
