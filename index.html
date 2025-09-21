@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.2</title>
+  <title>Acquire Hotel Status v1.3</title>
   <style>
     th { font-size:xxx-large; }
     td, button {
@@ -70,11 +70,13 @@
       var hotelStatus = document.getElementsByName("hotelStatus");
       for( var i = 0; i < hotelNames.length; i++ )
       {
-        hotelStatus[i].innerHTML = "<button onclick='updateSize(" + i + ", -1)'>-</button> ";
-        hotelStatus[i].innerHTML += "<img style='height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> ";
-        hotelStatus[i].innerHTML += "<button onclick='updateSize(" + i + ", 1)'>+</button> &nbsp; ";
-        hotelStatus[i].innerHTML += "<input style='height:5vh;font-size:2vh;font-weight:bold' type='number' value='25' min='0' max='25'>";
-        hotelStatus[i].innerHTML += "<div name='status' class='status'></div>";
+        hotelStatus[i].innerHTML = "<button onclick='updateSize(" + i + ", -1)'>-</button> "
+                                + "<img style='max-width:8vw;max-height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> "
+                                + "<button onclick='updateSize(" + i + ", 1)'>+</button> &nbsp; "
+                                + "<input style='width:4vw;height:5vh;font-size:2vh;font-weight:bold' type='number' value='25' min='0' max='25'/>"
+                                + "<button onclick='this.previousSibling.value = Math.max( 0, this.previousSibling.value-1 );'>-</button>"
+                                + "<button onclick='this.previousSibling.previousSibling.value = Math.min( 25, this.previousSibling.previousSibling.value-0+1 );'>+</button>"
+                                + "<div name='status' class='status'></div>";
       }
       toggleMode();
 
@@ -149,7 +151,7 @@
           candidates.innerHTML = "";
 
           for( var i = 0; i < candidateList.length; i++ )
-            candidates.innerHTML += "<img style='width:15%' src='" + candidateList[i] + ".png' onclick='mergeTo(" + candidateList[i] + ", " + hotelID + ")'/> ";
+            candidates.innerHTML += "<img style='max-width:" + (95/candidateList.length) + "%;max-height:30%' src='" + candidateList[i] + ".png' onclick='mergeTo(" + candidateList[i] + ", " + hotelID + ")'/> ";
         }
       }
     }
