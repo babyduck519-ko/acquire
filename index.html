@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.0</title>
+  <title>Acquire Hotel Status v1.1</title>
   <style>
     th { font-size:xxx-large; }
     td, button {
@@ -126,7 +126,7 @@
       else {
         var candidateList = new Array();
         for( var i = 0; i < hotelNames.length; i++ )
-          if( currentChainSizes[i] >= 2 && i != hotelID )
+          if( i != hotelID && currentChainSizes[i] >= 2 && currentChainSizes[i] >= currentChainSizes[hotelID] )
             candidateList.push( i );
 
         if( candidateList.length == 0 ) alert("합병할 호텔이 없습니다!");
@@ -161,8 +161,7 @@
     }
   </script>
 </head>
-<body onload="init()" background="bg.jpg" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;">
-  <!-- <body onload="init()" background="bg.jpg" onbeforeunload="return false;" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;"> -->
+<body onload="init()" background="bg.jpg" onbeforeunload="return false;" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;">
     <div id="selection" style="display:none">
       <table style="width:100%;height:100%;background-color:white">
         <tr style="height:10%"><th>합병할 호텔을 선택하세요</th></tr>
