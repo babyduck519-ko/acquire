@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.1</title>
+  <title>Acquire Hotel Status v1.2</title>
   <style>
     th { font-size:xxx-large; }
     td, button {
@@ -17,16 +17,16 @@
       height:20%;
     }
     img { vertical-align: middle; }
-    .status { font-size:2.5vh }
+    .status { font-size:4vh }
     .outlined
     {
       text-shadow:
-        2px 2px 3px white,    /* 오른쪽 아래 그림자 */
-        -2px -2px 3px white,  /* 왼쪽 위 그림자 */
-        2px -2px 3px white,   /* 오른쪽 위 그림자 */
-        -2px 2px 3px white;   /* 왼쪽 아래 그림자 */
+        2px 2px 3px white,
+        -2px -2px 3px white,
+        2px -2px 3px white,
+        -2px 2px 3px white;
     }
-    #selection
+    .modalWindow
     {
       position:absolute;
       left:20%;
@@ -65,22 +65,15 @@
       return stockValues;
     }
 
-    function appear()
-    {
-      document.getElementById("result").style.opacity = opa++ / 100;
-      if( opa < 100 ) setTimeout( appear, 25 );
-      else setTimeout( confirm, 2000 );
-    }
-
     function init()
     {
       var hotelStatus = document.getElementsByName("hotelStatus");
       for( var i = 0; i < hotelNames.length; i++ )
       {
         hotelStatus[i].innerHTML = "<button onclick='updateSize(" + i + ", -1)'>-</button> ";
-        hotelStatus[i].innerHTML += "<img style='height:7vh' src='" + i + ".png' onclick='merge(" + i + ")'/> ";
+        hotelStatus[i].innerHTML += "<img style='height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> ";
         hotelStatus[i].innerHTML += "<button onclick='updateSize(" + i + ", 1)'>+</button> &nbsp; ";
-        // hotelStatus[i].innerHTML += "<button onclick='merge(" + i + ")'>M</button>";
+        hotelStatus[i].innerHTML += "<input style='height:5vh;font-size:2vh;font-weight:bold' type='number' value='25' min='0' max='25'>";
         hotelStatus[i].innerHTML += "<div name='status' class='status'></div>";
       }
       toggleMode();
@@ -106,10 +99,10 @@
       var stockValues = getCurrentStockValue( hotelID );
       if( currentChainSizes[hotelID] < 2 ) hotelStatus[hotelID].innerText = "";
       else {
-        hotelStatus[hotelID].innerHTML = "현재 크기[" + currentChainSizes[hotelID] + "] " +
-                                         "가격[$" + stockValues[0] + "]<br/>주주 보너스";
-        hotelStatus[hotelID].innerHTML += " [$" + stockValues[1] + "], [$" + stockValues[2] + "]";
-        if(stockValues[3] > 0 ) hotelStatus[hotelID].innerHTML += ", [$" + stockValues[3] + "]";
+        hotelStatus[hotelID].innerHTML = "[" + currentChainSizes[hotelID] + "]: " +
+                                         "가격 <strong>$" + stockValues[0] + "</strong><br/>💰";
+        hotelStatus[hotelID].innerHTML += "$" + stockValues[1] + ", $" + stockValues[2];
+        if(stockValues[3] > 0 ) hotelStatus[hotelID].innerHTML += ", $" + stockValues[3];
 
         if( currentChainSizes[hotelID] > 10 )
         {
@@ -119,17 +112,36 @@
      }
     }
 
+    function alertM( alertText )
+    {
+      var alertWindow = document.getElementById("alertWindow");
+      alertWindow.style.display = "inline";
+      document.getElementById("alertText").innerText = alertText;
+      setTimeout( function() { document.getElementById("alertWindow").style.display = 'none' }, 2000 );
+    }
+
+    function confirmM( confirmText )
+    {
+      var confirmWindow = document.getElementById("confirmWindow");
+      confirmWindow.style.display = "inline";
+      document.getElementById("confirmText").innerText = confirmText;
+      return new Promise( (resolve, reject) => {
+          document.getElementById("confirmBtn").onclick = function() {resolve(true)}
+          document.getElementById("cancelBtn").onclick = function() {resolve(false)}
+      } );
+    }
+
     function merge( hotelID )
     {
-      if( currentChainSizes[hotelID] < 2 ) alert("호텔을 먼저 설립하세요!");
-      else if( currentChainSizes[hotelID] > 10 ) alert("안정된 호텔은 합병될 수 없습니다!");
+      if( currentChainSizes[hotelID] < 2 ) alertM("호텔을 먼저 설립하세요!");
+      else if( currentChainSizes[hotelID] > 10 ) alertM("안정된 호텔은 합병될 수 없습니다!");
       else {
         var candidateList = new Array();
         for( var i = 0; i < hotelNames.length; i++ )
           if( i != hotelID && currentChainSizes[i] >= 2 && currentChainSizes[i] >= currentChainSizes[hotelID] )
             candidateList.push( i );
 
-        if( candidateList.length == 0 ) alert("합병할 호텔이 없습니다!");
+        if( candidateList.length == 0 ) alertM("합병할 호텔이 없습니다!");
         else {
           var selectionWindow = document.getElementById("selection");
           selectionWindow.style.display = "inline";
@@ -144,20 +156,23 @@
 
     function mergeTo( biggerHotel, smallerHotel )
     {
-      if( confirm( hotelNames[smallerHotel] + " 호텔을 " + hotelNames[biggerHotel] + " 호텔과 합병하시겠습니까?") )
-      {
-        currentChainSizes[biggerHotel] += currentChainSizes[smallerHotel] + 1;
-        currentChainSizes[smallerHotel] = 1;
-        alert( hotelNames[smallerHotel] + " 호텔과 " + hotelNames[biggerHotel] + " 호텔이 합병되었습니다!" );
-        updateStatus(biggerHotel);
-        updateStatus(smallerHotel);
-        disappear();
-      }
+      confirmM( hotelNames[smallerHotel] + " 호텔을 " + hotelNames[biggerHotel] + " 호텔과 합병하시겠습니까?").then( result=> {
+          if( result )
+          {
+            currentChainSizes[biggerHotel] += currentChainSizes[smallerHotel] + 1;
+            currentChainSizes[smallerHotel] = 1;
+            alertM( hotelNames[smallerHotel] + " 호텔과 " + hotelNames[biggerHotel] + " 호텔이 합병되었습니다!" );
+            updateStatus(biggerHotel);
+            updateStatus(smallerHotel);
+            disappear("selection");
+          }
+          disappear("confirmWindow");
+      });
     }
 
-    function disappear()
+    function disappear( windowID )
     {
-      document.getElementById("selection").style.display = "none";
+      document.getElementById( windowID ).style.display = "none";
     }
 
     function toggleFullscreen() {
@@ -188,31 +203,47 @@
   </script>
 </head>
 <body onload="init()" background="bg.jpg" onbeforeunload="return false;" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;">
-    <div id="selection" style="display:none">
-      <table style="width:100%;height:100%;background-color:white">
-        <tr style="height:10%"><th>합병할 호텔을 선택하세요</th></tr>
-        <tr><td><div id="candidates"></div></td></tr>
-        <tr style="height:10%"><td><button style="width:30%;height:80%" onclick="disappear()">취소</button></td></tr>
-      </table>
-    </div>
-    <table style="width:100%;height:100%">
-      <tr style="height:7%"><th colspan="2"><span onclick="toggleFullscreen()">어콰이어 호텔 현황판</a></th></tr>
-      <tr style="height:23.25%">
-        <td width="50%"><div name="hotelStatus"></div></td>
-        <td width="50%"><div name="hotelStatus"></div></td>
+  <div id="selection" class="modalWindow" style="display:none">
+    <table style="width:100%;height:100%;background-color:white">
+      <tr style="height:10%"><th>합병할 호텔을 선택하세요</th></tr>
+      <tr><td><div id="candidates"></div></td></tr>
+      <tr style="height:10%"><td><button style="width:30%;height:80%" onclick="disappear('selection')">취소</button></td></tr>
+    </table>
+  </div>
+  <div id="alertWindow" class="modalWindow" style="display:none">
+    <table style="width:100%;height:100%;background-color:white">
+      <tr><th><div id="alertText"></div></th></tr>
+    </table>
+  </div>
+  <div id="confirmWindow" class="modalWindow" style="display:none">
+    <table style="width:100%;height:100%;background-color:white">
+      <tr><th><div id="confirmText"></div></td></tr>
+      <tr style="height:10%">
+        <td>
+          <button style="width:30%;height:80%" id="confirmBtn">확인</button> &nbsp;
+          <button style="width:30%;height:80%" id="cancelBtn">취소</button>
+        </td>
       </tr>
-      <tr style="height:23.25%">
-        <td width="50%"><div name="hotelStatus"></div></td>
-        <td width="50%"><div name="hotelStatus"></div></td>
-      </tr>
-      <tr style="height:23.25%">
-        <td width="50%"><div name="hotelStatus"></div></td>
-        <td width="50%"><div name="hotelStatus"></div></td>
-      </tr>
-      <tr style="height:23.25%">
-        <td width="50%"><div name="hotelStatus"></div></td>
-        <td width="50%"><div id="isClassic" onclick="toggleMode()"></div></td>
-      </tr>
-      </table>
+    </table>
+  </div>
+  <table style="width:100%;height:100%">
+    <tr style="height:3%"><th colspan="2"><span onclick="toggleFullscreen()">어콰이어 호텔 현황판</a></th></tr>
+    <tr style="height:23.25%">
+      <td width="50%"><div name="hotelStatus"></div></td>
+      <td width="50%"><div name="hotelStatus"></div></td>
+    </tr>
+    <tr style="height:23.25%">
+      <td width="50%"><div name="hotelStatus"></div></td>
+      <td width="50%"><div name="hotelStatus"></div></td>
+    </tr>
+    <tr style="height:23.25%">
+      <td width="50%"><div name="hotelStatus"></div></td>
+      <td width="50%"><div name="hotelStatus"></div></td>
+    </tr>
+    <tr style="height:23.25%">
+      <td width="50%"><div name="hotelStatus"></div></td>
+      <td width="50%"><div id="isClassic" onclick="toggleMode()"></div></td>
+    </tr>
+    </table>
   </body>
 </html>
