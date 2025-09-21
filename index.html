@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.4</title>
+  <title>Acquire Hotel Status v1.5</title>
   <style>
     th { font-size:xxx-large; }
     td, button {
@@ -46,6 +46,8 @@
     var chainAdjuster = [ 0, 0, 1, 1, 1, 2, 2 ];
     var chainSizes = [2, 3, 4, 5, 6, 11, 21, 31, 41];
     var secondBonuses = [ 1500, 2200, 3000, 3700, 4200, 5000, 5700, 6200, 7000, 7700, 8200 ];
+    var wishList = new Array();
+    var buyableCandidateList = new Array();
 
     function getCurrentStockValue( hotelID )
     {
@@ -73,7 +75,7 @@
         hotelStatus[i].innerHTML = "<button onclick='updateSize(" + i + ", -1)'>-</button> "
                                 + "<img style='max-width:8vw;max-height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> "
                                 + "<button onclick='updateSize(" + i + ", 1)'>+</button> "
-                                + "<input style='max-width:7vw;height:5vh;font-size:2vh;font-weight:bold' type='number' value='25' min='0' max='25'/>"
+                                + "<input name='remainStock' style='max-width:7vw;height:5vh;font-size:2vh;font-weight:bold' type='number' value='25' min='0' max='25'/>"
                                 + "<button onclick='this.previousSibling.value = Math.max( 0, this.previousSibling.value-1 );'>-</button>"
                                 + "<button onclick='this.previousSibling.previousSibling.value = Math.min( 25, this.previousSibling.previousSibling.value-0+1 );'>+</button>"
                                 + "<div name='status' class='status'></div>";
@@ -92,6 +94,9 @@
     {
       currentChainSizes[ hotelID ] = currentChainSizes[ hotelID ] + bias;
       if( currentChainSizes[ hotelID ] < 1 ) currentChainSizes[ hotelID ] = 1;
+      if( bias > 0 && currentChainSizes[ hotelID ] ==2 )  // first chain establisher bonus
+        document.getElementsByName("remainStock")[hotelID].value--;
+
       updateStatus( hotelID );
     }
 
@@ -126,7 +131,7 @@
     {
       var confirmWindow = document.getElementById("confirmWindow");
       confirmWindow.style.display = "inline";
-      document.getElementById("confirmText").innerText = confirmText;
+      document.getElementById("confirmText").innerHTML = confirmText;
       return new Promise( (resolve, reject) => {
           document.getElementById("confirmBtn").onclick = function() {resolve(true)}
           document.getElementById("cancelBtn").onclick = function() {resolve(false)}
@@ -202,6 +207,127 @@
             }
         }
     }
+
+    // object declaration
+    function buyableCandidate( hotelID, currentValue, remainStock )
+    {
+      this.hotelID = hotelID;
+      this.currentValue = currentValue;
+      this.remainStock = remainStock;
+      this.splitOne = function()
+      {
+        if( this.remainStock == 0 ) return null;
+        this.remainStock--;
+        return new buyableCandidate( this.hotelID, this.currentValue, 1 );
+      }
+
+      this.merge = function( target )
+      {
+        if( target.hotelID == this.hotelID )
+          this.remainStock++;
+      }
+
+      this.toString = function() {
+        return "$" + this.currentValue + " <img style='max-height:3vh' src='" + this.hotelID + ".png'/>";
+      }
+
+      this.getRemainString = function() {
+        return " " + this.remainStock + "개 남음";
+      }
+    }
+
+    function buyStock()
+    {
+      buyableCandidateList = new Array();
+      var stockCounts = document.getElementsByName("remainStock");
+      for( var i = 0; i < hotelNames.length; i++ )
+        if( currentChainSizes[i] >= 2 && parseInt( stockCounts[i].value ) > 0 )
+          buyableCandidateList.push( new buyableCandidate( i, getCurrentStockValue(i)[0], stockCounts[i].value-0 )  );
+
+      if( buyableCandidateList.length < 1 )
+      {
+        alertM("구입할 수 있는 주식이 없습니다!");
+        return;
+      }
+
+      wishList = new Array();
+      displayBuyableList();
+    }
+
+    function displayBuyableList()
+    {
+      var contextStr = "<table style='width:100%;height:100%'>";
+      for( var i = 0; i < hotelNames.length; i++ )
+      {
+        contextStr += "<tr>";
+
+        if( i < buyableCandidateList.length )
+        {
+          contextStr += "<td id='candidate" + i +"' onclick='addWishList(" + i + ")'>"
+                      + buyableCandidateList[i].toString() + buyableCandidateList[i].getRemainString()
+                      + "</td>";
+        } else
+          contextStr += "<td>&nbsp;</td>";
+
+        if( i == 0 ) contextStr += "<td rowspan='" + hotelNames.length + "' id='wishList'>장바구니</td>";
+
+        contextStr += "</tr>";
+      }
+
+      contextStr += "</table>";
+
+      confirmM(contextStr).then( result=> {
+          if( result )
+          {
+            var stockCounts = document.getElementsByName("remainStock");
+            for( var i = 0; i < wishList.length; i++ )
+              stockCounts[ wishList[i].hotelID ].value--;
+
+            alertM( "주식을 구입하였습니다.");
+          }
+          disappear("confirmWindow");
+      });;
+    }
+
+    function addWishList( candidateID )
+    {
+      if( wishList.length < 3 )
+      {
+        var newCandidate = buyableCandidateList[candidateID].splitOne();
+        if( newCandidate == null ) return;
+
+        wishList.push( newCandidate );
+        displayBuyableList();
+        refreshWishList();
+      }
+    }
+
+    function refreshWishList()
+    {
+      var wishListElem = document.getElementById("wishList");
+      var total = 0;
+      wishListElem.innerHTML = "장바구니<br/><br/>";
+      for( var i = 0; i < wishList.length; i++ )
+      {
+        wishListElem.innerHTML += "<table style='width:100%'><tr><td id='candidatee" + i +"' onclick='delWishList(" + i + ")'>"
+                                + wishList[i].toString()
+                                + "</td></tr></table>";
+        total += wishList[i].currentValue;
+      }
+      wishListElem.innerHTML += "<br/><br/>합계: $" + total;
+    }
+
+    function delWishList( wishListID )
+    {
+      var currentBuyableCandidate = wishList[wishListID];
+      for( var i = 0; i < buyableCandidateList.length; i++ )
+        buyableCandidateList[i].merge( currentBuyableCandidate );
+
+      displayBuyableList();
+      wishList.splice( wishListID, 1 );
+      refreshWishList();
+    }
+
   </script>
 </head>
 <body onload="init()" background="bg.jpg" onbeforeunload="return false;" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;">
@@ -244,7 +370,10 @@
     </tr>
     <tr style="height:23.25%">
       <td width="50%"><div name="hotelStatus"></div></td>
-      <td width="50%"><div id="isClassic" onclick="toggleMode()"></div></td>
+      <td width="50%">
+        <button style="width:50%;height:25%" onclick="buyStock()">주식 구입</button><br/><br/>
+        <button style="width:50%;height:25%" id="isClassic" onclick="toggleMode()"></button>
+      </td>
     </tr>
     </table>
   </body>
