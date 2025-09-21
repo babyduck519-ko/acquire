@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.5</title>
+  <title>Acquire Hotel Status v1.6</title>
   <style>
     th { font-size:xxx-large; }
     td, button {
@@ -115,7 +115,15 @@
           hotelStatus[hotelID].innerHTML = "<span class='outlined' style='color:#" + hotelColors[hotelID] + "'>"
           + hotelStatus[hotelID].innerHTML + "</span>";
         }
+        touched( hotelStatus[hotelID], 1 );
      }
+    }
+
+    function touched( statusElem, curAlpha )
+    {
+      if( curAlpha <= 0 ) return;
+      statusElem.style = "background-color:rgba(128, 128, 128, " + curAlpha + ")";
+      setTimeout( () => touched(statusElem, curAlpha - 0.15), 100 );
     }
 
     function alertM( alertText )
