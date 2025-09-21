@@ -159,6 +159,32 @@
     {
       document.getElementById("selection").style.display = "none";
     }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            // 전체화면 시작
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                document.documentElement.msRequestFullscreen();
+            }
+        } else {
+            // 전체화면 종료
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullScreen) { // Firefox
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { // Chrome, Safari
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { // IE/Edge
+                document.msExitFullscreen();
+            }
+        }
+    }
   </script>
 </head>
 <body onload="init()" background="bg.jpg" onbeforeunload="return false;" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;">
@@ -170,7 +196,7 @@
       </table>
     </div>
     <table style="width:100%;height:100%">
-      <tr style="height:7%"><th colspan="2">어콰이어 호텔 현황판</th></tr>
+      <tr style="height:7%"><th colspan="2"><span onclick="toggleFullscreen()">어콰이어 호텔 현황판</a></th></tr>
       <tr style="height:23.25%">
         <td width="50%"><div name="hotelStatus"></div></td>
         <td width="50%"><div name="hotelStatus"></div></td>
