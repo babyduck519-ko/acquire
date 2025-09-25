@@ -127,9 +127,9 @@
 
     function touched( statusElem, curAlpha )
     {
-      if( curAlpha <= 0 ) return;
+      curAlpha = Math.max( 0, curAlpha - 0.15 );
       statusElem.style = "background-color:rgba(128, 128, 128, " + curAlpha + ")";
-      setTimeout( () => touched(statusElem, curAlpha - 0.15), 100 );
+      if( curAlpha > 0 ) setTimeout( () => touched(statusElem, curAlpha), 100 );
     }
 
     function alertM( alertText )
