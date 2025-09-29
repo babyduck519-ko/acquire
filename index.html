@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.7</title>
+  <title>Acquire Hotel Status v1.8</title>
   <style>
     html, body {
        -webkit-user-select: none; /* 크롬, 사파리 */
@@ -24,6 +24,10 @@
     }
     img { vertical-align: middle; }
     .status { font-size:4vh }
+    .remainStock {
+      font-size:x-large;
+      font-weight:bold;
+    }
     .outlined
     {
       text-shadow:
@@ -32,13 +36,27 @@
         2px -2px 3px white,
         -2px 2px 3px white;
     }
+    .outlined2
+    {
+      text-shadow:
+        2px 2px 3px black,
+        -2px -2px 3px black,
+        2px -2px 3px black,
+        -2px 2px 3px black;
+    }
     .modalWindow
     {
       position:absolute;
-      left:15%;
-      width:70%;
+      left:5%;
+      width:90%;
       height:40%;
       top:20%;
+    }
+    .smallButton
+    {
+      width:5vmax;
+      height:5vmax;
+      font-size:small;
     }
   </style>
   <script>
@@ -78,12 +96,12 @@
       var hotelStatus = document.getElementsByName("hotelStatus");
       for( var i = 0; i < hotelNames.length; i++ )
       {
-        hotelStatus[i].innerHTML = "<button onclick='updateSize(" + i + ", -1)'>-</button> "
+        hotelStatus[i].innerHTML = "<button style='width:10vw;height:10vh' onclick='updateSize(" + i + ", 1)'> ➕ </button> "
                                 + "<img style='max-width:8vw;max-height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> "
-                                + "<button onclick='updateSize(" + i + ", 1)'>+</button> "
-                                + "<input name='remainStock' style='max-width:7vw;height:5vh;font-size:2vh;font-weight:bold' type='number' value='25' min='0' max='25'/>"
-                                + "<button onclick='this.previousSibling.value = Math.max( 0, this.previousSibling.value-1 );'>-</button>"
-                                + "<button onclick='this.previousSibling.previousSibling.value = Math.min( 25, this.previousSibling.previousSibling.value-0+1 );'>+</button>"
+                                + "<button style='width:10vw;height:10vh' onclick='updateSize(" + i + ", -1)'> ➖ </button> "
+                                + "<span name='remainStock' class='remainStock'>25</span>"
+                                + "<button onclick='touched( this.previousSibling, 1 );this.previousSibling.innerText = Math.min( 25, this.previousSibling.innerText-0+1 );'>+</button>"
+                                + "<button onclick='touched( this.previousSibling.previousSibling, 1 );this.previousSibling.previousSibling.innerText = Math.max( 0, this.previousSibling.previousSibling.innerText-1 );'>-</button>"
                                 + "<div name='status' class='status'></div>";
       }
       toggleMode();
@@ -100,7 +118,7 @@
       currentChainSizes[ hotelID ] = currentChainSizes[ hotelID ] + bias;
       if( currentChainSizes[ hotelID ] < 1 ) currentChainSizes[ hotelID ] = 1;
       if( bias > 0 && currentChainSizes[ hotelID ] ==2 )  // first chain establisher bonus
-        document.getElementsByName("remainStock")[hotelID].value--;
+        document.getElementsByName("remainStock")[hotelID].innerText = document.getElementsByName("remainStock")[hotelID].innerText - 1;
 
       updateStatus( hotelID );
     }
@@ -111,12 +129,20 @@
       var stockValues = getCurrentStockValue( hotelID );
       if( currentChainSizes[hotelID] < 2 ) hotelStatus[hotelID].innerText = "";
       else {
-        hotelStatus[hotelID].innerHTML = "[" + currentChainSizes[hotelID] + "]: " +
-                                         "가격 <strong>$" + stockValues[0] + "</strong><br/>💰";
-        hotelStatus[hotelID].innerHTML += "$" + stockValues[1] + ", $" + stockValues[2];
-        if(stockValues[3] > 0 ) hotelStatus[hotelID].innerHTML += ", $" + stockValues[3];
+        hotelStatus[hotelID].innerHTML = "규모[" + currentChainSizes[hotelID] + "] " +
+                                         " <strong>$" + stockValues[0] + "</strong>/주<br/>";
+        var bonusStr = "<span style='font-size:large'>💰$" + stockValues[1] + ", $" + stockValues[2];
+        if(stockValues[3] > 0 ) bonusStr += ", $" + stockValues[3];
+        bonusStr += "</span>";
 
-        if( currentChainSizes[hotelID] > 10 )
+        hotelStatus[hotelID].innerHTML += bonusStr;
+
+        if( currentChainSizes[hotelID] > 40 )
+        {
+          hotelStatus[hotelID].innerHTML = "<span class='outlined2' style='color:#" + hotelColors[hotelID] + "'>"
+          + hotelStatus[hotelID].innerHTML + "</span>";
+        }
+        else if( currentChainSizes[hotelID] > 10 )
         {
           hotelStatus[hotelID].innerHTML = "<span class='outlined' style='color:#" + hotelColors[hotelID] + "'>"
           + hotelStatus[hotelID].innerHTML + "</span>";
@@ -254,8 +280,8 @@
       buyableCandidateList = new Array();
       var stockCounts = document.getElementsByName("remainStock");
       for( var i = 0; i < hotelNames.length; i++ )
-        if( currentChainSizes[i] >= 2 && parseInt( stockCounts[i].value ) > 0 )
-          buyableCandidateList.push( new buyableCandidate( i, getCurrentStockValue(i)[0], stockCounts[i].value-0 )  );
+        if( currentChainSizes[i] >= 2 && parseInt( stockCounts[i].innerText ) > 0 )
+          buyableCandidateList.push( new buyableCandidate( i, getCurrentStockValue(i)[0], stockCounts[i].innerText-0 )  );
 
       if( buyableCandidateList.length < 1 )
       {
@@ -294,7 +320,7 @@
           {
             var stockCounts = document.getElementsByName("remainStock");
             for( var i = 0; i < wishList.length; i++ )
-              stockCounts[ wishList[i].hotelID ].value--;
+              stockCounts[ wishList[i].hotelID ].innerText = stockCounts[ wishList[i].hotelID ].innerText - 1;
 
             alertM( "주식을 구입하였습니다.");
           }
@@ -358,7 +384,7 @@
   </div>
   <div id="confirmWindow" class="modalWindow" style="display:none">
     <table style="width:100%;height:100%;background-color:white">
-      <tr><th><div id="confirmText"></div></td></tr>
+      <tr><th><div id="confirmText"></div></th></tr>
       <tr style="height:10%">
         <td>
           <button style="width:30%;height:80%" id="confirmBtn">확인</button> &nbsp;
@@ -367,6 +393,31 @@
       </tr>
     </table>
   </div>
+  <!-- <div id="stockSellWindow" class="modalWindow" style="display:inline">
+    <table style="width:100%;height:100%;background-color:white">
+      <tr><td><div id="stockSellText" style="text-align:left">
+        모기업: <기업명> &nbsp; &nbsp; 남은 주식: [0]개<br/>
+        합병될 기업: <기업명> &nbsp; &nbsp; 남은 주식: [0]개</div>
+      </td></tr>
+      <tr><td style="text-align:center">
+        주식 2:1 교환
+        <br/>
+        <button class="smallButton">-</button><input type='range' min='0' max='25' style='width:75%'/><button class="smallButton">+</button><br/>
+        [00]개를 [00]개로 교환
+      </div></td></tr>
+      <tr><td style="text-align:center">
+        팔기
+        <br/>
+        <button class="smallButton">-</button><input type='range' min='0' max='25' style='width:75%'/><button class="smallButton">+</button><br/>
+        $300 X [00]개 = $1200
+      </td></tr>
+      <tr style="height:10%">
+        <td>
+          <button style="width:30%;height:80%" id="sellConfirmBtn">확인</button>
+        </td>
+      </tr>
+    </table>
+  </div> -->
   <table style="width:100%;height:100%">
     <tr style="height:4%" onclick="toggleFullscreen()"><th colspan="2">어콰이어 호텔 현황판</th></tr>
     <tr style="height:24%">
@@ -384,8 +435,8 @@
     <tr style="height:24%">
       <td width="50%"><div name="hotelStatus"></div></td>
       <td width="50%">
-        <button style="width:50%;height:25%" onclick="buyStock()">주식 구입</button><div style="height:10%">&nbsp;</div>
-        <button style="width:75%;height:25%" id="isClassic" onclick="toggleMode()"></button>
+        <button style="width:90%;height:50%" onclick="buyStock()">주식 구입</button><div style="height:10%">&nbsp;</div>
+        <button style="width:70%;height:25%;font-size:large" id="isClassic" onclick="toggleMode()"></button>
       </td>
     </tr>
     </table>
