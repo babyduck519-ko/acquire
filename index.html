@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.8</title>
+  <title>Acquire Hotel Status v1.9</title>
   <style>
     html, body {
        -webkit-user-select: none; /* 크롬, 사파리 */
@@ -50,7 +50,7 @@
       left:5%;
       width:90%;
       height:40%;
-      top:20%;
+      top:15%;
     }
     .smallButton
     {
@@ -65,7 +65,7 @@
     var hotelColors = ["f43b38", "bb9f03", "3d4dbc", "00aeb5", "842d95", "0898e2", "fa882d"];
     var currentChainSizes = new Array(hotelNames.length);
     for( var i = 0; i < currentChainSizes.length; i++ )
-      currentChainSizes[i] = 1;
+      currentChainSizes[i] = 1; // for DEBUG - original value is 1
 
     var chainAdjuster = [ 0, 0, 1, 1, 1, 2, 2 ];
     var chainSizes = [2, 3, 4, 5, 6, 11, 21, 31, 41];
@@ -101,7 +101,7 @@
                                 + "<button style='width:6vw;height:10vh' onclick='updateSize(" + i + ", -1)'> ➖ </button> "
                                 + "<span name='remainStock' class='remainStock'>25</span>"
                                 + "<button onclick='touched( this.previousSibling, 1 );this.previousSibling.innerText = Math.min( 25, this.previousSibling.innerText-0+1 );'>+</button>"
-                                + "<button style='width:7vw' onclick='touched( this.previousSibling.previousSibling, 1 );this.previousSibling.previousSibling.innerText = Math.max( 0, this.previousSibling.previousSibling.innerText-1 );'>-</button>"
+                                + "<button onclick='touched( this.previousSibling.previousSibling, 1 );this.previousSibling.previousSibling.innerText = Math.max( 0, this.previousSibling.previousSibling.innerText-1 );'>-</button>"
                                 + "<div name='status' class='status'></div>";
       }
       toggleMode();
@@ -205,12 +205,15 @@
       confirmM( hotelNames[smallerHotel] + " 호텔을 " + hotelNames[biggerHotel] + " 호텔과 합병하시겠습니까?").then( result=> {
           if( result )
           {
-            currentChainSizes[biggerHotel] += currentChainSizes[smallerHotel] + 1;
-            currentChainSizes[smallerHotel] = 1;
-            alertM( hotelNames[smallerHotel] + " 호텔과 " + hotelNames[biggerHotel] + " 호텔이 합병되었습니다!" );
-            updateStatus(biggerHotel);
-            updateStatus(smallerHotel);
-            disappear("selection");
+            sellStocks( biggerHotel, smallerHotel ).then( result=> {
+              disappear('stockSellWindow');
+              currentChainSizes[biggerHotel] += currentChainSizes[smallerHotel] + 1;
+              currentChainSizes[smallerHotel] = 1;
+              alertM( hotelNames[smallerHotel] + " 호텔과 " + hotelNames[biggerHotel] + " 호텔이 합병되었습니다!" );
+              updateStatus(biggerHotel);
+              updateStatus(smallerHotel);
+              disappear("selection");
+            });
           }
           disappear("confirmWindow");
       });
@@ -367,6 +370,109 @@
       refreshWishList();
     }
 
+    function sellStocks( motherID, sonID )
+    {
+      // document.getElementsByName("remainStock")[1].innerText = 10; // for DEBUG - delete it to return to nomal
+      var stockSellWindow = document.getElementById("stockSellWindow");
+      stockSellWindow.style = "display:inline";
+      stockSellWindow.querySelector("#mother").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + motherID + ".png'/>";
+      stockSellWindow.querySelector("#mother2").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + motherID + ".png'/>";
+      stockSellWindow.querySelector("#son").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + sonID + ".png'/>";
+      stockSellWindow.querySelector("#son1").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + sonID + ".png'/>";
+      stockSellWindow.querySelector("#son2").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + sonID + ".png'/>";
+      stockSellWindow.querySelector("#son3").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + sonID + ".png'/>";
+
+      var motherRemain = stockSellWindow.querySelector("#motherRemain");
+      var sonRemain = stockSellWindow.querySelector("#sonRemain");
+      var stockCounts = document.getElementsByName("remainStock");
+      motherRemain.innerText = stockCounts[motherID].innerText;
+      sonRemain.innerText = stockCounts[sonID].innerText;
+
+      var stockExchange = stockSellWindow.querySelector("#stockExchange");
+      var stockExchangeFrom = stockSellWindow.querySelector("#stockExchangeFrom");
+      var stockExchangeTo = stockSellWindow.querySelector("#stockExchangeTo");
+      var stockSell = stockSellWindow.querySelector("#stockSell");
+
+      stockExchange.value = 0;
+      stockExchange.max = Math.min( parseInt(motherRemain.innerText)*2, 25-parseInt(sonRemain.innerText) );
+
+      var stockValues = getCurrentStockValue( sonID );
+      var bonusStr = "<span style='font-size:xx-large'>💰 $" + stockValues[1] + ", $" + stockValues[2];
+      if(stockValues[3] > 0 ) bonusStr += ", $" + stockValues[3];
+      bonusStr += "</span>";
+      stockSellWindow.querySelector("#bonusInfo").innerHTML = bonusStr;
+
+      stockSell.value = 0;
+      stockSell.max = 25-parseInt(sonRemain.innerText);
+      stockSellWindow.querySelector("#stockSellValue").innerText = stockValues[0];
+
+      return new Promise( (resolve, reject) => {
+          document.getElementById("sellConfirmBtn").onclick = function() {resolve(true)}
+      } );
+    }
+
+    function stockExchageSellPreview( caller )
+    {
+      var stockSellWindow = document.getElementById("stockSellWindow");
+      var motherRemain = stockSellWindow.querySelector("#motherRemain");
+      var sonRemain = stockSellWindow.querySelector("#sonRemain");
+      var stockCounts = document.getElementsByName("remainStock");
+      var motherID = stockSellWindow.querySelector("#mother").firstChild.src;
+      motherID = motherID.substr(motherID.indexOf(".png")-1,1);
+      var sonID = stockSellWindow.querySelector("#son").firstChild.src;
+      sonID = sonID.substr(sonID.indexOf(".png")-1,1);
+      var stockExchange = document.getElementById("stockExchange");
+      var stockSell = document.getElementById("stockSell");
+      motherRemain.innerText = stockCounts[motherID].innerText;
+      sonRemain.innerText = stockCounts[sonID].innerText;
+
+      if( caller == stockExchange )
+      {
+        var stockExchangeFrom = stockSellWindow.querySelector("#stockExchangeFrom");
+        var stockExchangeTo = stockSellWindow.querySelector("#stockExchangeTo");
+        stockExchangeFrom.innerText = caller.value;
+        stockExchangeTo.innerText = caller.value / 2;
+        stockSell.max = 25 - parseInt(sonRemain.innerText) - caller.value;
+      }
+      else
+      {
+        var stockSellCount = stockSellWindow.querySelector("#stockSellCount");
+        var stockSellResult = stockSellWindow.querySelector("#stockSellResult");
+        var stockSellValue = stockSellWindow.querySelector("#stockSellValue");
+        stockSellCount.innerText = caller.value;
+        stockSellResult.innerText = parseInt(stockSellValue.innerText) * parseInt(caller.value);
+        stockExchange.max = Math.min( parseInt(motherRemain.innerText)*2, 25-parseInt(sonRemain.innerText)-caller.value );
+      }
+
+      motherRemain.innerText = parseInt(stockCounts[motherID].innerText) - parseInt(stockExchange.value)/2;
+      sonRemain.innerText = parseInt(stockCounts[sonID].innerText) + parseInt( stockExchange.value ) + parseInt( stockSell.value );
+    }
+
+    function stockExchangeSellConfirm()
+    {
+      var motherRemain = stockSellWindow.querySelector("#motherRemain");
+      var sonRemain = stockSellWindow.querySelector("#sonRemain");
+      var stockCounts = document.getElementsByName("remainStock");
+      var motherID = stockSellWindow.querySelector("#mother").firstChild.src;
+      motherID = motherID.substr(motherID.indexOf(".png")-1,1);
+      var sonID = stockSellWindow.querySelector("#son").firstChild.src;
+      sonID = sonID.substr(sonID.indexOf(".png")-1,1);
+      var stockExchange = document.getElementById("stockExchange");
+      var stockSell = document.getElementById("stockSell");
+
+      stockCounts[motherID].innerText = motherRemain.innerText;
+      stockCounts[sonID].innerText = sonRemain.innerText;
+
+      stockExchange.value = 0;
+      stockSell.value = 0;
+      stockExchange.max = Math.min( parseInt(motherRemain.innerText)*2, 25-parseInt(sonRemain.innerText) );
+      stockSell.max = 25 - parseInt(sonRemain.innerText);
+
+      stockExchageSellPreview( stockExchange );
+      stockExchageSellPreview( stockSell );
+
+      alertM("주식 처분이 완료되었습니다.");
+    }
   </script>
 </head>
 <body onload="init()" background="bg.jpg" onbeforeunload="return false;" style="background-color:#cce2e1;background-size: 100% auto;background-repeat: no-repeat;margin:1">
@@ -375,11 +481,6 @@
       <tr style="height:10%"><th>합병할 호텔을 선택하세요</th></tr>
       <tr><td><div id="candidates"></div></td></tr>
       <tr style="height:10%"><td><button style="width:30%;height:80%" onclick="disappear('selection')">취소</button></td></tr>
-    </table>
-  </div>
-  <div id="alertWindow" class="modalWindow" style="display:none">
-    <table style="width:100%;height:100%;background-color:white">
-      <tr><th><div id="alertText"></div></th></tr>
     </table>
   </div>
   <div id="confirmWindow" class="modalWindow" style="display:none">
@@ -393,31 +494,39 @@
       </tr>
     </table>
   </div>
-  <!-- <div id="stockSellWindow" class="modalWindow" style="display:inline">
+  <div id="stockSellWindow" class="modalWindow" style="display:none">
     <table style="width:100%;height:100%;background-color:white">
+      <tr><th>주식 처분</th></tr>
       <tr><td><div id="stockSellText" style="text-align:left">
-        모기업: <기업명> &nbsp; &nbsp; 남은 주식: [0]개<br/>
-        합병될 기업: <기업명> &nbsp; &nbsp; 남은 주식: [0]개</div>
+        모기업: <span id="mother"></span> &nbsp; &nbsp; 남은 주식: <span id="motherRemain"></span>개<br/>
+        합병될 기업: <span id="son"></span> &nbsp; &nbsp; 남은 주식: <span id="sonRemain"></span>개</div>
       </td></tr>
+      <tr><td><span id="son1"></span> 주주 보너스<div id="bonusInfo"></div></td></tr>
       <tr><td style="text-align:center">
         주식 2:1 교환
         <br/>
-        <button class="smallButton">-</button><input type='range' min='0' max='25' style='width:75%'/><button class="smallButton">+</button><br/>
-        [00]개를 [00]개로 교환
+        <button class="smallButton" onclick="this.nextSibling.value = this.nextSibling.value-2;stockExchageSellPreview(this.nextSibling)">-</button><input id="stockExchange" ondrag="stockExchageSellPreview(this)" onchange="stockExchageSellPreview(this)" type="range" min="0" max="25" step="2" style="width:75%"/><button class="smallButton" onclick="this.previousSibling.value = this.previousSibling.value-0+2;stockExchageSellPreview(this.previousSibling)">+</button><br/>
+        <span id="son2"></span> <span id="stockExchangeFrom">0</span>개를 <span id="mother2"></span> <span id="stockExchangeTo">0</span>개로 교환
       </div></td></tr>
       <tr><td style="text-align:center">
         팔기
         <br/>
-        <button class="smallButton">-</button><input type='range' min='0' max='25' style='width:75%'/><button class="smallButton">+</button><br/>
-        $300 X [00]개 = $1200
+        <button class="smallButton" onclick="this.nextSibling.value = this.nextSibling.value-1;stockExchageSellPreview(this.nextSibling)">-</button><input id="stockSell" ondrag="stockExchageSellPreview(this)" onchange="stockExchageSellPreview(this)" type="range" min="0" max="25" style="width:75%"/><button class="smallButton" onclick="this.previousSibling.value = this.previousSibling.value-0+1;stockExchageSellPreview(this.previousSibling)">+</button><br/>
+        <span id="son3"></span> <span id="stockSellCount">0</span>개 X $<span id="stockSellValue"></span> = $<span id="stockSellResult">0</span>
       </td></tr>
       <tr style="height:10%">
         <td>
-          <button style="width:30%;height:80%" id="sellConfirmBtn">확인</button>
+          <button style="width:30%;height:80%" onclick="stockExchangeSellConfirm()">정산</button>
+          <button style="width:30%;height:80%" id="sellConfirmBtn" onclick="">완료</button>
         </td>
       </tr>
     </table>
-  </div> -->
+  </div>
+  <div id="alertWindow" class="modalWindow" style="display:none">
+    <table style="width:100%;height:100%;background-color:white">
+      <tr><th><div id="alertText"></div></th></tr>
+    </table>
+  </div>
   <table style="width:100%;height:100%">
     <tr style="height:4%" onclick="toggleFullscreen()"><th colspan="2">어콰이어 호텔 현황판</th></tr>
     <tr style="height:24%">
