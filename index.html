@@ -117,7 +117,7 @@
     {
       currentChainSizes[ hotelID ] = currentChainSizes[ hotelID ] + bias;
       if( currentChainSizes[ hotelID ] < 1 ) currentChainSizes[ hotelID ] = 1;
-      if( bias > 0 && currentChainSizes[ hotelID ] ==2 )  // first chain establisher bonus
+      if( bias > 0 && currentChainSizes[ hotelID ] ==2 && parseInt(document.getElementsByName("remainStock")[hotelID].innerText) > 0 )  // first chain establisher bonus
         document.getElementsByName("remainStock")[hotelID].innerText = document.getElementsByName("remainStock")[hotelID].innerText - 1;
 
       updateStatus( hotelID );
