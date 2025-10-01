@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v1.9</title>
+  <title>Acquire Hotel Status v2.0</title>
   <style>
     html, body {
        -webkit-user-select: none; /* 크롬, 사파리 */
@@ -162,7 +162,8 @@
     {
       var alertWindow = document.getElementById("alertWindow");
       alertWindow.style.display = "inline";
-      document.getElementById("alertText").innerText = alertText;
+      alertWindow.querySelector("#alertText").innerHTML = alertText;
+      alertWindow.style.top = (document.documentElement.clientHeight - alertWindow.offsetHeight)/2*0.8;
       setTimeout( function() { document.getElementById("alertWindow").style.display = 'none' }, 2000 );
     }
 
@@ -170,7 +171,8 @@
     {
       var confirmWindow = document.getElementById("confirmWindow");
       confirmWindow.style.display = "inline";
-      document.getElementById("confirmText").innerHTML = confirmText;
+      confirmWindow.querySelector("#confirmText").innerHTML = confirmText;
+      confirmWindow.style.top = (document.documentElement.clientHeight - confirmWindow.offsetHeight)/2*0.8;
       return new Promise( (resolve, reject) => {
           document.getElementById("confirmBtn").onclick = function() {resolve(true)}
           document.getElementById("cancelBtn").onclick = function() {resolve(false)}
@@ -191,25 +193,29 @@
         else {
           var selectionWindow = document.getElementById("selection");
           selectionWindow.style.display = "inline";
-          var candidates = document.getElementById("candidates");
+          var candidates = selectionWindow.querySelector("#candidates");
           candidates.innerHTML = "";
 
           for( var i = 0; i < candidateList.length; i++ )
             candidates.innerHTML += "<img style='max-width:" + (95/candidateList.length) + "%;max-height:30%' src='" + candidateList[i] + ".png' onclick='mergeTo(" + candidateList[i] + ", " + hotelID + ")'/> ";
+
+          selectionWindow.style.top = (document.documentElement.clientHeight - selectionWindow.offsetHeight)/2*0.8;
         }
       }
     }
 
     function mergeTo( biggerHotel, smallerHotel )
     {
-      confirmM( hotelNames[smallerHotel] + " 호텔을 " + hotelNames[biggerHotel] + " 호텔과 합병하시겠습니까?").then( result=> {
+      confirmM( "<span style='color:#" + hotelColors[smallerHotel] + "'>" + hotelNames[smallerHotel] + "</span> 호텔을 " +
+                "<span style='color:#" + hotelColors[biggerHotel] + "'>" + hotelNames[biggerHotel] + "</span> 호텔과 합병하시겠습니까?").then( result=> {
           if( result )
           {
             sellStocks( biggerHotel, smallerHotel ).then( result=> {
               disappear('stockSellWindow');
               currentChainSizes[biggerHotel] += currentChainSizes[smallerHotel] + 1;
               currentChainSizes[smallerHotel] = 1;
-              alertM( hotelNames[smallerHotel] + " 호텔과 " + hotelNames[biggerHotel] + " 호텔이 합병되었습니다!" );
+              alertM( "<span style='color:#" + hotelColors[smallerHotel] + "'>" + hotelNames[smallerHotel] + "</span> 호텔이 " +
+                      "<span style='color:#" + hotelColors[biggerHotel] + "'>" + hotelNames[biggerHotel] + "</span> 호텔로 합병되었습니다!" );
               updateStatus(biggerHotel);
               updateStatus(smallerHotel);
               disappear("selection");
@@ -374,7 +380,7 @@
     {
       // document.getElementsByName("remainStock")[1].innerText = 10; // for DEBUG - delete it to return to nomal
       var stockSellWindow = document.getElementById("stockSellWindow");
-      stockSellWindow.style = "display:inline";
+      stockSellWindow.style.display = "inline";
       stockSellWindow.querySelector("#mother").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + motherID + ".png'/>";
       stockSellWindow.querySelector("#mother2").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + motherID + ".png'/>";
       stockSellWindow.querySelector("#son").innerHTML = "<img style='max-width:14vw;max-height:6vh' src='" + sonID + ".png'/>";
@@ -405,6 +411,8 @@
       stockSell.value = 0;
       stockSell.max = 25-parseInt(sonRemain.innerText);
       stockSellWindow.querySelector("#stockSellValue").innerText = stockValues[0];
+
+      stockSellWindow.style.top = (document.documentElement.clientHeight - stockSellWindow.offsetHeight)/2*0.4;
 
       return new Promise( (resolve, reject) => {
           document.getElementById("sellConfirmBtn").onclick = function() {resolve(true)}
