@@ -20,8 +20,6 @@
     }
     button {
       font-size:x-large;
-      /* width:10%;
-      height:20%; */
     }
     img { vertical-align: middle; }
     .status { font-size:4vh }
@@ -50,7 +48,7 @@
       position:absolute;
       left:5%;
       width:90%;
-      height:40%;
+      height:50%;
       top:15%;
     }
     .smallButton
@@ -216,6 +214,7 @@
                 "<span style='color:#" + hotelColors[biggerHotel] + "'>" + hotelNames[biggerHotel] + "</span> 호텔과 합병하시겠습니까?").then( result=> {
           if( result )
           {
+            disappear("selection");
             sellStocks( biggerHotel, smallerHotel ).then( result=> {
               disappear('stockSellWindow');
               currentChainSizes[biggerHotel] += currentChainSizes[smallerHotel] + 1;
@@ -224,7 +223,6 @@
                       "<span style='color:#" + hotelColors[biggerHotel] + "'>" + hotelNames[biggerHotel] + "</span> 호텔로 합병되었습니다!" );
               updateStatus(biggerHotel);
               updateStatus(smallerHotel);
-              disappear("selection");
             });
           }
           disappear("confirmWindow");
@@ -513,7 +511,7 @@
   <div id="confirmWindow" class="modalWindow" style="display:none">
     <table style="width:100%;height:100%;background-color:white">
       <tr><th><div id="confirmText"></div></th></tr>
-      <tr style="height:10%">
+      <tr style="height:15%">
         <td>
           <button style="width:30%;height:80%" id="confirmBtn">확인</button> &nbsp;
           <button style="width:30%;height:80%" id="cancelBtn">취소</button>
@@ -541,7 +539,7 @@
         <button class="smallButton" onclick="this.nextSibling.value = this.nextSibling.value-1;stockExchageSellPreview(this.nextSibling)">-</button><input id="stockSell" ondrag="stockExchageSellPreview(this)" onchange="stockExchageSellPreview(this)" type="range" min="0" max="25" style="width:75%"/><button class="smallButton" onclick="this.previousSibling.value = this.previousSibling.value-0+1;stockExchageSellPreview(this.previousSibling)">+</button><br/>
         <span id="son3"></span> <span id="stockSellCount">0</span>개 X $<span id="stockSellValue"></span> = $<span id="stockSellResult">0</span>
       </td></tr>
-      <tr style="height:10%">
+      <tr style="height:15%">
         <td>
           <button style="width:30%;height:80%" onclick="stockExchangeSellConfirm()">정산</button>
           <button style="width:30%;height:80%" id="sellConfirmBtn" onclick="">완료</button>
@@ -559,8 +557,8 @@
   </div>
   <div id="aboutWindow" class="modalWindow" style="display:none">
     <table style="width:100%;height:100%;background-color:white">
-      <tr><td style="font-size:small;text-align:left">
-        <pre style="white-space:pre-wrap;word-warp:break-word">🧩 앱 소개
+      <tr><td style="font-size:large;text-align:left;">
+        <pre style="white-space:pre-wrap;word-warp:break-word;overflow-y:auto;max-height:50vh">🧩 앱 소개
 이 앱은 보드게임 "어콰이어(Acquire)" 실물 플레이 시 체인 크기, 주식 가격, 주주 보너스를 빠르게 확인하기 위한 계산 보조용 도구입니다.
 
 ⚙️ 기능
@@ -577,7 +575,7 @@
 합병 발생 시 해당 체인의 이름을 클릭하고 합병 될 체인을 선택합니다.
 이후 잔여 주식을 정산합니다.
 
-📚 저작권 안내 (중요)
+<strong>📚 저작권 안내 (중요)</strong>
 이 도구는 보드게임 "Acquire"의 팬이 <strong>"비상업적"</strong>으로 제작한 비공식 보조 도구입니다.
 게임의 원작 권리는 해당 권리자(예: Hasbro, Avalon Hill 등)에게 있습니다.
 게임 규칙은 코리아보드게임즈 2023년판 공식 룰북에 기반하였습니다.
@@ -585,10 +583,10 @@
 👤 제작자 & 링크
 개발: 애기오리 with 황금옥수수
 GitHub: <a href="https://github.com/babyduck519-ko/acquire" target="_blank">https://github.com/babyduck519-ko/acquire</a>
-문의/피드백: babyduck519@gmail.com
+문의/피드백: <a href="mailto:babyduck519@gmail.com">babyduck519@gmail.com</a>
       </pre>
       </td></tr>
-      <tr style="height:20%"><td><button onclick="document.getElementById('aboutWindow').style.display='none'"> &nbsp; &nbsp; 확 &nbsp; &nbsp; 인 &nbsp; &nbsp; </button></td></tr>
+      <tr style="height:10%"><td><button style="height:80%" onclick="document.getElementById('aboutWindow').style.display='none'"> &nbsp; &nbsp; 확 &nbsp; &nbsp; 인 &nbsp; &nbsp; </button></td></tr>
     </table>
   </div>
   <table style="width:100%;height:100%">
