@@ -97,10 +97,10 @@
       var hotelStatus = document.getElementsByName("hotelStatus");
       for( var i = 0; i < hotelNames.length; i++ )
       {
-        hotelStatus[i].innerHTML = "<table style='display:inline-block'><tr><td style='border:none'>"
+        hotelStatus[i].innerHTML = "<table style='display:inline-block;border-spacing:2vw'><tr><td style='border:none'>"
                                 + "<button style='width:10vw;height:10vh' onclick='updateSize(" + i + ", 1)'> ➕ </button> "
                                 + "<img style='max-width:12vw;max-height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> "
-                                + "<button style='width:6vw;height:10vh' onclick='updateSize(" + i + ", -1)'> ➖ </button> "
+                                + "<button style='width:6vw;height:10vh' onclick='updateSize(" + i + ", -1)'> - </button> "
                                 + "</td><td style='border:none'>"
                                 + "<button onclick='touched( this.nextSibling.nextSibling, 1 );this.nextSibling.nextSibling.innerText = Math.min( 25, this.nextSibling.nextSibling.innerText-0+1 );'>+</button>"
                                 + "<br/>"
@@ -576,7 +576,6 @@
 해당 체인의 크기 및 주식 가격, 주주 보너스는 화면에 표시되는 가격/보너스를 참고합니다.
 합병 발생 시 해당 체인의 이름을 클릭하고 합병 될 체인을 선택합니다.
 이후 잔여 주식을 정산합니다.
-(정산 하지 않으면 해당 주식을 그대로 보유하는 것으로 간주)
 
 📚 저작권 안내 (중요)
 이 도구는 보드게임 "Acquire"의 팬이 <strong>"비상업적"</strong>으로 제작한 비공식 보조 도구입니다.
