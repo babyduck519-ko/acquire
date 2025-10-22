@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Acquire Hotel Status v2.0</title>
+  <title>Acquire Helper v2.0</title>
   <style>
     html, body {
        -webkit-user-select: none; /* 크롬, 사파리 */
@@ -10,7 +10,7 @@
        user-select: none;         /* 표준 */
      }
     th { font-size:xx-large; }
-    td, button {
+    td {
       font-size:xx-large;
       text-align:center;
       vertical-align: middle;
@@ -19,8 +19,9 @@
       border:2px solid black;
     }
     button {
-      width:10%;
-      height:20%;
+      font-size:x-large;
+      /* width:10%;
+      height:20%; */
     }
     img { vertical-align: middle; }
     .status { font-size:4vh }
@@ -65,7 +66,7 @@
     var hotelColors = ["f43b38", "bb9f03", "3d4dbc", "00aeb5", "842d95", "0898e2", "fa882d"];
     var currentChainSizes = new Array(hotelNames.length);
     for( var i = 0; i < currentChainSizes.length; i++ )
-      currentChainSizes[i] = 1; // for DEBUG - original value is 1
+      currentChainSizes[i] = 1; // default value is 1. Other for DEBUG
 
     var chainAdjuster = [ 0, 0, 1, 1, 1, 2, 2 ];
     var chainSizes = [2, 3, 4, 5, 6, 11, 21, 31, 41];
@@ -96,12 +97,17 @@
       var hotelStatus = document.getElementsByName("hotelStatus");
       for( var i = 0; i < hotelNames.length; i++ )
       {
-        hotelStatus[i].innerHTML = "<button style='width:10vw;height:10vh' onclick='updateSize(" + i + ", 1)'> ➕ </button> "
-                                + "<img style='max-width:8vw;max-height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> "
+        hotelStatus[i].innerHTML = "<table style='display:inline-block'><tr><td style='border:none'>"
+                                + "<button style='width:10vw;height:10vh' onclick='updateSize(" + i + ", 1)'> ➕ </button> "
+                                + "<img style='max-width:12vw;max-height:6vh' src='" + i + ".png' onclick='merge(" + i + ")'/> "
                                 + "<button style='width:6vw;height:10vh' onclick='updateSize(" + i + ", -1)'> ➖ </button> "
+                                + "</td><td style='border:none'>"
+                                + "<button onclick='touched( this.nextSibling.nextSibling, 1 );this.nextSibling.nextSibling.innerText = Math.min( 25, this.nextSibling.nextSibling.innerText-0+1 );'>+</button>"
+                                + "<br/>"
                                 + "<span name='remainStock' class='remainStock'>25</span>"
-                                + "<button onclick='touched( this.previousSibling, 1 );this.previousSibling.innerText = Math.min( 25, this.previousSibling.innerText-0+1 );'>+</button>"
+                                + "<br/>"
                                 + "<button onclick='touched( this.previousSibling.previousSibling, 1 );this.previousSibling.previousSibling.innerText = Math.max( 0, this.previousSibling.previousSibling.innerText-1 );'>-</button>"
+                                + "</td></tr></table>"
                                 + "<div name='status' class='status'></div>";
       }
       toggleMode();
@@ -230,7 +236,8 @@
       document.getElementById( windowID ).style.display = "none";
     }
 
-    function toggleFullscreen() {
+    let wakeLock = null;
+    async function toggleFullscreen() {
         if (!document.fullscreenElement) {
             // 전체화면 시작
             if (document.documentElement.requestFullscreen) {
@@ -242,6 +249,13 @@
             } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
                 document.documentElement.msRequestFullscreen();
             }
+
+            try {
+              wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+              console.error(err);
+            }
+
         } else {
             // 전체화면 종료
             if (document.exitFullscreen) {
@@ -252,6 +266,11 @@
                 document.webkitExitFullscreen();
             } else if (document.msExitFullscreen) { // IE/Edge
                 document.msExitFullscreen();
+            }
+
+            if (wakeLock) {
+              await wakeLock.release();
+              wakeLock = null;
             }
         }
     }
@@ -535,8 +554,46 @@
       <tr><th><div id="alertText"></div></th></tr>
     </table>
   </div>
+  <div style="position:absolute;top:1%;left:94%;font-size:large" onclick="document.getElementById('aboutWindow').style.display='inline'">
+    [?]
+  </div>
+  <div id="aboutWindow" class="modalWindow" style="display:none">
+    <table style="width:100%;height:100%;background-color:white">
+      <tr><td style="font-size:small;text-align:left">
+        <pre style="white-space:pre-wrap;word-warp:break-word">🧩 앱 소개
+이 앱은 보드게임 "어콰이어(Acquire)" 실물 플레이 시 체인 크기, 주식 가격, 주주 보너스를 빠르게 확인하기 위한 계산 보조용 도구입니다.
+
+⚙️ 기능
+✔ 체인별 크기, 주식 가격 및 보너스 자동 계산
+✔ 주식 구입시 지불 금액 및 잔여 주식 자동 계산
+✔ 11칸 이상의 안정된 체인 자동 표시
+✔ 합병 시 주주 보너스 표시 및 주식 처분 기능
+
+📖 사용 방법
+제목을 누르면 전체화면으로 표시됩니다.
+게임판에 타일을 놓을 때 특정 체인의 크기가 늘어난다면 "+" 버튼을 누릅니다.
+(최초 체인 설립시 지급되는 보너스 주식은 자동 반영됩니다)
+해당 체인의 크기 및 주식 가격, 주주 보너스는 화면에 표시되는 가격/보너스를 참고합니다.
+합병 발생 시 해당 체인의 이름을 클릭하고 합병 될 체인을 선택합니다.
+이후 잔여 주식을 정산합니다.
+(정산 하지 않으면 해당 주식을 그대로 보유하는 것으로 간주)
+
+📚 저작권 안내 (중요)
+이 도구는 보드게임 "Acquire"의 팬이 <strong>"비상업적"</strong>으로 제작한 비공식 보조 도구입니다.
+게임의 원작 권리는 해당 권리자(예: Hasbro, Avalon Hill 등)에게 있습니다.
+게임 규칙은 코리아보드게임즈 2024년판 공식 룰북에 기반하였습니다.
+
+👤 제작자 & 링크
+개발: 애기오리
+GitHub: <a href="https://github.com/babyduck519-ko/acquire" target="_blank">https://github.com/babyduck519-ko/acquire</a>
+문의/피드백: babyduck519@gmail.com
+      </pre>
+      </td></tr>
+      <tr style="height:20%"><td><button onclick="document.getElementById('aboutWindow').style.display='none'"> &nbsp; &nbsp; 확 &nbsp; &nbsp; 인 &nbsp; &nbsp; </button></td></tr>
+    </table>
+  </div>
   <table style="width:100%;height:100%">
-    <tr style="height:4%" onclick="toggleFullscreen()"><th colspan="2">어콰이어 호텔 현황판</th></tr>
+    <tr style="height:4%" onclick="toggleFullscreen()"><th colspan="2">어콰이어 호텔/주식 현황판</th></tr>
     <tr style="height:24%">
       <td width="50%"><div name="hotelStatus"></div></td>
       <td width="50%"><div name="hotelStatus"></div></td>
